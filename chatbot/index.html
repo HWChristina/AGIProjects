@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客服机器人</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+        }
+        #chat-container {
+            width: 500px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        #chat-box {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        #user-input-container {
+            display: flex;
+            align-items: center;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        #send-button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .message {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+        }
+        .message.user {
+            flex-direction: row-reverse;
+            text-align: right;
+        }
+        .message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+        .message .text {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f1f1f1;
+            word-wrap: break-word;
+        }
+        .message.user .text {
+            background: #dcf8c6;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="user-input-container">
+            <input type="text" id="user-input" placeholder="输入你的问题">
+            <button id="send-button">发送</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('send-button').addEventListener('click', function() {
+            let userInput = document.getElementById('user-input').value;
+            if (userInput.trim() !== '') {
+                addMessage(userInput, 'user');
+                fetch('http://localhost:5000/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: userInput }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    addMessage(data.answer, 'bot');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    addMessage('抱歉，出现了一个错误。', 'bot');
+                });
+
+                document.getElementById('user-input').value = '';
+            }
+        });
+
+        function addMessage(text, sender) {
+            let message = document.createElement('div');
+            message.classList.add('message', sender);
+
+            let avatar = document.createElement('img');
+            avatar.classList.add('avatar');
+            avatar.src = sender === 'user' ? 'user-avatar.png' : 'bot-avatar.png';
+
+            let messageText = document.createElement('div');
+            messageText.classList.add('text');
+            messageText.textContent = text;
+
+            message.appendChild(avatar);
+            message.appendChild(messageText);
+
+            document.getElementById('chat-box').appendChild(message);
+            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+        }
+    </script>
+</body>
+</html>
